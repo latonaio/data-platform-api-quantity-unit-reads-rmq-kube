@@ -17,6 +17,9 @@ func ConvertToQuantityUnit(rows *sql.Rows) (*[]QuantityUnit, error) {
 
 		err := rows.Scan(
 			&pm.QuantityUnit,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
+			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
@@ -25,7 +28,10 @@ func ConvertToQuantityUnit(rows *sql.Rows) (*[]QuantityUnit, error) {
 
 		data := pm
 		quantityUnit = append(quantityUnit, QuantityUnit{
-			QuantityUnit: data.QuantityUnit,
+			QuantityUnit: 			data.QuantityUnit,
+			CreationDate:			data.CreationDate,
+			LastChangeDate:			data.LastChangeDate,
+			IsMarkedForDeletion:	data.IsMarkedForDeletion,
 		})
 	}
 
@@ -45,6 +51,9 @@ func ConvertToQuantityUnitText(rows *sql.Rows) (*[]QuantityUnitText, error) {
 			&pm.QuantityUnit,
 			&pm.Language,
 			&pm.QuantityUnitName,
+			&pm.CreationDate,
+			&pm.LastChangeDate,
+			&pm.IsMarkedForDeletion,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
@@ -53,44 +62,13 @@ func ConvertToQuantityUnitText(rows *sql.Rows) (*[]QuantityUnitText, error) {
 
 		data := pm
 		quantityUnitText = append(quantityUnitText, QuantityUnitText{
-			QuantityUnit:     data.QuantityUnit,
-			Language:         data.Language,
-			QuantityUnitName: data.QuantityUnitName,
+			QuantityUnit:     		data.QuantityUnit,
+			Language:         		data.Language,
+			QuantityUnitName: 		data.QuantityUnitName,
+			CreationDate:			data.CreationDate,
+			LastChangeDate:			data.LastChangeDate,
+			IsMarkedForDeletion:	data.IsMarkedForDeletion,
 		})
-	}
-
-	return &quantityUnitText, nil
-}
-
-func ConvertToQuantityUnitTexts(rows *sql.Rows) (*[]QuantityUnitText, error) {
-	defer rows.Close()
-	quantityUnitText := make([]QuantityUnitText, 0)
-
-	i := 0
-	for rows.Next() {
-		i++
-		pm := &requests.QuantityUnitTexts{}
-
-		err := rows.Scan(
-			&pm.QuantityUnit,
-			&pm.Language,
-			&pm.QuantityUnitName,
-		)
-		if err != nil {
-			fmt.Printf("err = %+v \n", err)
-			return &quantityUnitText, err
-		}
-
-		data := pm
-		quantityUnitText = append(quantityUnitText, QuantityUnitText{
-			QuantityUnit:     data.QuantityUnit,
-			Language:         data.Language,
-			QuantityUnitName: data.QuantityUnitName,
-		})
-	}
-	if i == 0 {
-		fmt.Printf("DBに対象のレコードが存在しません。")
-		return &quantityUnitText, nil
 	}
 
 	return &quantityUnitText, nil

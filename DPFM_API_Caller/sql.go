@@ -27,6 +27,10 @@ func (c *DPFMAPICaller) readSqlProcess(
 			func() {
 				quantityUnit = c.QuantityUnit(mtx, input, output, errs, log)
 			}()
+		case "QuantityUnits":
+			func() {
+				quantityUnit = c.QuantityUnits(mtx, input, output, errs, log)
+			}()
 		case "QuantityUnitText":
 			func() {
 				quantityUnitText = c.QuantityUnitText(mtx, input, output, errs, log)
@@ -54,12 +58,48 @@ func (c *DPFMAPICaller) QuantityUnit(
 	errs *[]error,
 	log *logger.Logger,
 ) *[]dpfm_api_output_formatter.QuantityUnit {
-	quantityUnit := input.QuantityUnit.QuantityUnit
+	where := fmt.Sprintf("WHERE QuantityUnit = '%s'", input.QuantityUnit.QuantityUnit)
+
+	if input.QuantityUnit.IsMarkedForDeletion != nil {
+		where = fmt.Sprintf("%s\nAND IsMarkedForDeletion = %v", where, *input.QuantityUnit.IsMarkedForDeletion)
+	}
 
 	rows, err := c.db.Query(
 		`SELECT *
 		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_quantity_unit_quantity_unit_data
-		WHERE QuantityUnit = ?;`, quantityUnit,
+		` + where + ` ORDER BY IsMarkedForDeletion ASC, QuantityUnit DESC;`,
+	)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+	defer rows.Close()
+
+	data, err := dpfm_api_output_formatter.ConvertToQuantityUnit(rows)
+	if err != nil {
+		*errs = append(*errs, err)
+		return nil
+	}
+
+	return data
+}
+
+func (c *DPFMAPICaller) QuantityUnits(
+	mtx *sync.Mutex,
+	input *dpfm_api_input_reader.SDC,
+	output *dpfm_api_output_formatter.SDC,
+	errs *[]error,
+	log *logger.Logger,
+) *[]dpfm_api_output_formatter.QuantityUnit {
+
+	if input.QuantityUnit.IsMarkedForDeletion != nil {
+		where = fmt.Sprintf("%s\nAND IsMarkedForDeletion = %v", where, *input.QuantityUnit.IsMarkedForDeletion)
+	}
+
+	rows, err := c.db.Query(
+		`SELECT *
+		FROM DataPlatformMastersAndTransactionsMysqlKube.data_platform_quantity_unit_quantity_unit_data
+		` + where + ` ORDER BY IsMarkedForDeletion ASC, QuantityUnit DESC;`,
 	)
 	if err != nil {
 		*errs = append(*errs, err)
